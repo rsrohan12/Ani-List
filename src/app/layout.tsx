@@ -7,6 +7,7 @@ import Footer from "@/components/Footer";
 import { Navbar } from "@/components/Navbar";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { headers, cookies } from 'next/headers'
+import { Toaster } from "@/components/ui/toaster";
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -33,6 +34,7 @@ export default async function RootLayout({
           <main className="pt-16">
             {children}
           </main>
+          <Toaster />
           <Footer />
         </Providers>
       </body>

@@ -16,22 +16,32 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
 import { Button } from './ui/button'
 import { LogOut } from 'lucide-react'
-import { toast, ToastContainer } from 'react-toastify'
-import "react-toastify/dist/ReactToastify.css";
+import { useToast } from "@/hooks/use-toast"
+import { ToastAction } from './ui/toast'
+// import { toast, ToastContainer } from 'react-toastify'
+// import "react-toastify/dist/ReactToastify.css";
 
 export function SignoutBtn() {
 
   const supabase = createClientComponentClient()
   const router = useRouter()
 
+  const { toast } = useToast()
+
   const logout = async() => {
     await supabase.auth.signOut()
     router.refresh()
-    toast.success("Logged out successfully!", { theme: "colored" });
+    // toast.success("Logged out successfully!", { theme: "colored" });
+    toast({
+      variant: "default",
+      title: "Logout:",
+      description: "User logout successfully.",
+      className : "bg-blue-400/50 text-lg"
+    })
   }
   return (
     <div>
-      <ToastContainer />
+      {/* <ToastContainer /> */}
       <AlertDialog>
   <AlertDialogTrigger asChild>
     <Button variant="default" size="sm" className="ml-4">

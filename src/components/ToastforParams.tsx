@@ -1,22 +1,31 @@
 "use client";
 
+import { useToast } from "@/hooks/use-toast";
 import { useSearchParams } from "next/navigation";
 import React, { useEffect } from "react";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { Toaster } from "./ui/toaster";
 
 function ToastforParams() {
   const params = useSearchParams();
+  const { toast } = useToast()
 
   useEffect(() => {
     if(params?.get("error")){
-      toast.error(params.get("error"), {theme: "colored"})
+      toast({
+        variant: "destructive",
+        title: "Uh oh! Something went wrong.",
+        description: params.get("error")
+      })
       setTimeout(() => {
         history.replaceState(null, "", window.location.pathname); // Clear query params
       }, 1000);
     }
     else if (params?.get("success")) {
-      toast.success(params.get("success"), { theme: "colored" });
+      toast({
+        title: "Login:",
+        description: "User logged in successfully!",
+        className: "bg-blue-400/50 text-lg"
+      })
       setTimeout(() => {
         history.replaceState(null, "", window.location.pathname); // Clear query params
       }, 1000);
@@ -25,7 +34,7 @@ function ToastforParams() {
 
   return (
     <div>
-      <ToastContainer />
+      <Toaster />
     </div>
   );
 }

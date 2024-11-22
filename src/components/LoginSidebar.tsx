@@ -10,8 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Github, Mail } from "lucide-react";
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+// import { ToastContainer, toast } from 'react-toastify';
+// import 'react-toastify/dist/ReactToastify.css';
 import {
   Form,
   FormControl,
@@ -23,6 +23,7 @@ import {
 import { useRouter } from "next/navigation";
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import SocialBtns from "./SocialBtns";
+import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -39,6 +40,8 @@ interface LoginSidebarProps {
 export function LoginSidebar({ isOpen, onClose }: LoginSidebarProps) {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+
+  const { toast } = useToast()
 
   const supabase = createClientComponentClient()
 
@@ -69,14 +72,19 @@ export function LoginSidebar({ isOpen, onClose }: LoginSidebarProps) {
     else if(data.user) {
       console.log(data.user)
       // router.refresh()
-      toast.success("Logged in successfully!", { theme: "colored" });
+      // toast.success("Logged in successfully!", { theme: "colored" });
+      toast({
+        variant: "default",
+        title: "Login:",
+        description: "User logged in successfully!",
+      })
     }
   };
 
   return (
 
     <>
-    <ToastContainer />
+    {/* <ToastContainer /> */}
 
       <Sheet open={isOpen} onOpenChange={onClose}>
         <SheetContent side="left" className="w-full sm:w-[400px]">
