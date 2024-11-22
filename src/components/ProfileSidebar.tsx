@@ -102,7 +102,7 @@ export function ProfileSidebar({newSession}: {newSession : UserData}) {
             </Link>
             {state ? (
               <Button variant="ghost" 
-              className="w-full justify-start text-destructive" 
+              className="w-full justify-start text-blue-300" 
               size="sm">
                 <LogIn className="mr-2 h-4 w-4" />
                 Login
