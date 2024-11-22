@@ -77,6 +77,7 @@ export function LoginSidebar({ isOpen, onClose }: LoginSidebarProps) {
         variant: "default",
         title: "Login:",
         description: "User logged in successfully!",
+        className: "bg-blue-400/50 text-lg"
       })
     }
   };

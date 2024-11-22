@@ -23,7 +23,7 @@ function ToastforParams() {
     else if (params?.get("success")) {
       toast({
         title: "Login:",
-        description: "User logged in successfully!",
+        description: params.get("success"),
         className: "bg-blue-400/50 text-lg"
       })
       setTimeout(() => {
