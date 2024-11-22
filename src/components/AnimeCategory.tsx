@@ -13,6 +13,7 @@ export function AnimeCategoryContent() {
   const params = useSearchParams();
   const [animeList, setAnimeList] = useState<Anime[]>([]);
   const [selectedAnime, setSelectedAnime] = useState<Anime | null>(null)
+  
   const query = params.get('q') || '';
 
   useEffect(() => {
@@ -29,9 +30,7 @@ export function AnimeCategoryContent() {
             finally{
                 setIsLoading(false)
             }
-        } else {
-            
-        }
+        } 
     }
     fetchData();
   }, [params])
@@ -39,7 +38,7 @@ export function AnimeCategoryContent() {
   return (
     <div className="container mx-auto py-8">
     <h1 className="text-4xl font-bold mb-8 text-center">Anime Search</h1>
-    {query.length <= 0 && <span className="text-2xl border-b-2 border-cyan-700">Search to see the <span className="text-pink-600/75 text-2xl ">details...</span> </span>}
+    {query.length <= 0 && <span className="text-2xl border-b-2 border-cyan-700 lg:ml-6">Filter to see the <span className="text-pink-600/75 text-2xl ">details...</span> </span>}
     <ScrollArea className="h-[calc(100vh-240px)]">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {isLoading

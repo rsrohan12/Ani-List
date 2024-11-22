@@ -3,13 +3,58 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Bell, Settings, User, LogOut } from "lucide-react";
+import { Bell, Settings, User, LogOut, LogIn } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
-export function ProfileSidebar() {
+interface UserData {
+  name: string | null;
+  email: string | null;
+}
+
+export function ProfileSidebar({newSession}: {newSession : UserData}) {
 
   const [open, setOpen] = useState(false);
+  const [state, setState] = useState<boolean>();
+  const [userData, setUserData] = useState<UserData>(newSession);
+  const supabase = createClientComponentClient()
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setState(false)
+      }
+      else{
+        setState(true)
+      }
+    };
+
+    fetchUser();
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        setUserData({
+          name: session?.user.user_metadata.name || null,
+          email: session?.user.email || null,
+        });
+        setState(false)
+      } else if (event === 'SIGNED_OUT') {
+        setUserData({ name: null, email: null });
+        setState(true)
+      }
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, [supabase.auth]);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setOpen(false);
+    setState(true)
+  };
 
   return (
     <Sheet open={open} onOpenChange={() => setOpen(!open)}>
@@ -34,8 +79,13 @@ export function ProfileSidebar() {
               <AvatarFallback>JD</AvatarFallback>
             </Avatar>
             <div>
-              <h2 className="text-xl font-semibold">Rohan Thakur</h2>
-              <p className="text-sm text-muted-foreground">rsrohan787@gmail.com</p>
+               <h2 className="text-xl font-semibold">
+                {userData.name
+                  ? `${userData.name.charAt(0).toUpperCase()}${userData.name.slice(1)}`
+                  : "Guest"
+                }
+              </h2>
+              <p className="text-sm text-muted-foreground">{userData.email || "Not signed in"}</p>
             </div>
           </div>
 
@@ -50,10 +100,22 @@ export function ProfileSidebar() {
                 Settings
               </Button>
             </Link>
-            <Button variant="ghost" className="w-full justify-start text-destructive" size="sm">
-              <LogOut className="mr-2 h-4 w-4" />
-              Logout
-            </Button>
+            {state ? (
+              <Button variant="ghost" 
+              className="w-full justify-start text-destructive" 
+              size="sm">
+                <LogIn className="mr-2 h-4 w-4" />
+                Login
+              </Button>
+            ) : (
+              <Button variant="ghost" 
+              className="w-full justify-start text-destructive" 
+              size="sm"
+              onClick={handleLogout}>
+                <LogOut className="mr-2 h-4 w-4" />
+                Logout
+              </Button>
+            )}
           </div>
 
           <div className="border-t pt-6">

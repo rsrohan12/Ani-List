@@ -28,7 +28,7 @@ export default function FilterCategory() {
 
   const handleSubmit = () => {
     router.push(`/anime-category_list?q=${filteredCategories}`)
-    console.log('Selected category:', selectedCategory)
+    //console.log('Selected category:', selectedCategory)
     setIsOpen(false)
   }
   
