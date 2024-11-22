@@ -120,7 +120,10 @@ export function ProfileSidebar({newSession}: {newSession : UserData}) {
 
           <div className="border-t pt-6">
             <h3 className="text-sm font-medium mb-2">Recent Activity</h3>
-            <div className="space-y-4">
+            {state ? (
+              <span className="text-muted-foreground">No recent activity</span>
+            ) : (
+              <div className="space-y-4">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="flex items-center space-x-4">
                   <div className="h-2 w-2 rounded-full bg-primary" />
@@ -131,6 +134,8 @@ export function ProfileSidebar({newSession}: {newSession : UserData}) {
                 </div>
               ))}
             </div>
+            )}
+            
           </div>
         </div>
       </SheetContent>
