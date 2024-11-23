@@ -7,6 +7,7 @@ import { Bell, Settings, User, LogOut, LogIn } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { LoginSidebar } from "./LoginSidebar";
 
 interface UserData {
   name: string | null;
@@ -18,7 +19,9 @@ export function ProfileSidebar({newSession}: {newSession : UserData}) {
   const [open, setOpen] = useState(false);
   const [state, setState] = useState<boolean>();
   const [userData, setUserData] = useState<UserData>(newSession);
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
   const supabase = createClientComponentClient()
+
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -103,7 +106,11 @@ export function ProfileSidebar({newSession}: {newSession : UserData}) {
             {state ? (
               <Button variant="ghost" 
               className="w-full justify-start text-blue-300" 
-              size="sm">
+              size="sm"
+              onClick={() => {setIsLoginOpen(true)
+                setOpen(false)}
+              }
+              >
                 <LogIn className="mr-2 h-4 w-4" />
                 Login
               </Button>
@@ -139,6 +146,9 @@ export function ProfileSidebar({newSession}: {newSession : UserData}) {
           </div>
         </div>
       </SheetContent>
+      <LoginSidebar isOpen={isLoginOpen} 
+      onClose={() => setIsLoginOpen(false)}
+      />
     </Sheet>
   );
 }
