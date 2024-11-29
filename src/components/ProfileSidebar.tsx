@@ -8,6 +8,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { LoginSidebar } from "./LoginSidebar";
+import { DropdownMenuDemo} from "./EditProfile";
+import { getS3ImageUrl } from "@/lib/utils";
 
 interface UserData {
   name: string | null;
@@ -17,34 +19,50 @@ interface UserData {
 export function ProfileSidebar({newSession}: {newSession : UserData}) {
 
   const [open, setOpen] = useState(false);
-  const [state, setState] = useState<boolean>();
+  const [isGuest, setIsGuest] = useState<boolean>();
   const [userData, setUserData] = useState<UserData>(newSession);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
-  const supabase = createClientComponentClient()
+  const [imgurl, setImgurl] = useState<string>("");
+  const supabase = createClientComponentClient();
 
+  const fetchUserData = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: profileData, error } = await supabase
+        .from('add-photo')
+        .select('image')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (error) {
+        console.error('Error fetching profile data:', error);
+      }
+
+      setImgurl(profileData?.image)
+
+      setUserData({
+        name: user.user_metadata.name || null,
+        email: user.email || null,
+      });
+
+      setIsGuest(false);
+    } else {
+      setUserData({ name: null, email: null });
+      setIsGuest(true);
+    }
+  };
 
   useEffect(() => {
-    const fetchUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setState(false)
-      }
-      else{
-        setState(true)
-      }
-    };
+    fetchUserData();
 
-    fetchUser();
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        setUserData({
-          name: session?.user.user_metadata.name || null,
-          email: session?.user.email || null,
-        });
-        setState(false)
+        fetchUserData();
       } else if (event === 'SIGNED_OUT') {
         setUserData({ name: null, email: null });
-        setState(true)
+        setIsGuest(true);
       }
     });
 
@@ -56,7 +74,7 @@ export function ProfileSidebar({newSession}: {newSession : UserData}) {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setOpen(false);
-    setState(true)
+    setIsGuest(true);
   };
 
   return (
@@ -64,7 +82,11 @@ export function ProfileSidebar({newSession}: {newSession : UserData}) {
       <SheetTrigger asChild>
         <Button variant="ghost" size="sm" className="rounded-full w-8 h-8 p-0">
           <Avatar className="h-8 w-8">
-            <AvatarImage src="https://github.com/shadcn.png" alt="Profile" />
+            {isGuest ? (
+              <AvatarImage className="dark:bg-white" src="https://img.icons8.com/?size=100&id=98957&format=png&color=000000" alt="Guest" />
+            ) : (
+              <AvatarImage src={imgurl ? getS3ImageUrl(imgurl) : "https://github.com/shadcn.png"} alt="Profile" />
+            )}
             <AvatarFallback>
               <User className="h-4 w-4" />
             </AvatarFallback>
@@ -77,10 +99,7 @@ export function ProfileSidebar({newSession}: {newSession : UserData}) {
         </SheetHeader>
         <div className="mt-6 space-y-6">
           <div className="flex items-center space-x-4">
-            <Avatar className="h-16 w-16">
-              <AvatarImage src="https://github.com/shadcn.png" alt="Profile" />
-              <AvatarFallback>JD</AvatarFallback>
-            </Avatar>
+          <DropdownMenuDemo checkState={isGuest ?? false} onImageUpdate={fetchUserData} />
             <div>
                <h2 className="text-xl font-semibold">
                 {userData.name
@@ -103,7 +122,7 @@ export function ProfileSidebar({newSession}: {newSession : UserData}) {
                 Settings
               </Button>
             </Link>
-            {state ? (
+            {isGuest ? (
               <Button variant="ghost" 
               className="w-full justify-start text-blue-300" 
               size="sm"
@@ -127,7 +146,7 @@ export function ProfileSidebar({newSession}: {newSession : UserData}) {
 
           <div className="border-t pt-6">
             <h3 className="text-sm font-medium mb-2">Recent Activity</h3>
-            {state ? (
+            {isGuest ? (
               <span className="text-muted-foreground">No recent activity</span>
             ) : (
               <div className="space-y-4">
