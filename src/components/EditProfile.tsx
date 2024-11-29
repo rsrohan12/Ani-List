@@ -8,6 +8,7 @@ import {
     Eye,
     Keyboard,
     Pen,
+    Trash2,
     X,
 } from "lucide-react"
 import {
@@ -24,7 +25,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "./ui/input"
 import { useToast } from "@/hooks/use-toast"
 import { getS3ImageUrl } from "@/lib/utils"
-import { ImageModal } from "./Image-Modal"
 import { Dialog, DialogContent } from "./ui/dialog"
 
 interface DropdownMenuDemoProps {
@@ -124,6 +124,35 @@ export function DropdownMenuDemo({ checkState, onImageUpdate }: DropdownMenuDemo
         }
     }
 
+    const handleDeleteImage = async () => {
+        try {
+            const { data: { user } } = await supabase.auth.getUser()
+            if (user?.id) {
+                const {data, error:delImg} = await supabase.from("add-photo")
+                .delete()
+                .eq("user_id", user.id)
+                if (delImg) {
+                    console.error("Error deleting image:", delImg)
+                }
+                else{
+                    setImageUrl("")
+                    await fetchUserImage() // Fetch the latest image to ensure we're displaying the most recent one
+                    onImageUpdate()
+                    toast({
+                        title: "Picture deleted",
+                        description: "Your profile picture has been successfully deleted.",
+                        className: "bg-red-400/50 text-lg"
+                    })
+                }
+            }
+            // console.log("Delete")
+        }
+        catch(error){
+            console.error("Error fetching user:", error)
+        }
+
+    }
+
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -171,6 +200,7 @@ export function DropdownMenuDemo({ checkState, onImageUpdate }: DropdownMenuDemo
                                 <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
                             </DropdownMenuItem>
                             {imageUrl && (
+                                <>
                                     <DropdownMenuItem
                                         onSelect={() => setIsDialogOpen(true)}
                                         className="text-yellow-500/90"
@@ -179,12 +209,17 @@ export function DropdownMenuDemo({ checkState, onImageUpdate }: DropdownMenuDemo
                                         <span>View Picture</span>
                                         <DropdownMenuShortcut>⇧⌘V</DropdownMenuShortcut>
                                     </DropdownMenuItem>
-                                )}
-                            <DropdownMenuItem className="text-yellow-500/90">
-                                <CreditCard className="mr-2 h-4 w-4" />
-                                <span>Billing</span>
-                                <DropdownMenuShortcut>⌘B</DropdownMenuShortcut>
-                            </DropdownMenuItem>
+
+                                    <DropdownMenuItem
+                                        onSelect={handleDeleteImage}
+                                        className="text-yellow-500/90"
+                                    >
+                                        <Trash2 className="mr-2 h-4 w-4" />
+                                        <span>Remove Picture</span>
+                                        <DropdownMenuShortcut>⇧⌘R</DropdownMenuShortcut>
+                                    </DropdownMenuItem>
+                                </>
+                            )}
                             <DropdownMenuItem className="text-yellow-500/90">
                                 <Keyboard className="mr-2 h-4 w-4" />
                                 <span>Keyboard shortcuts</span>
