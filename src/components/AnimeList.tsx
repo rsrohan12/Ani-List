@@ -18,6 +18,9 @@ export function AnimeListContent() {
   const check = async() => {
     if(query.length > 0){
       setIsLoading(true)
+      
+      localStorage.setItem("query", query);
+
       try {
         const response = await fetch(`https://api.jikan.moe/v4/anime?q=${query}`);
         const data = await response.json();

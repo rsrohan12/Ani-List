@@ -5,11 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Bell, Settings, User, LogOut, LogIn } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { LoginSidebar } from "./LoginSidebar";
 import { DropdownMenuDemo} from "./EditProfile";
 import { getS3ImageUrl } from "@/lib/utils";
+import EnhancedActivity from "./EnhancedActivity";
 
 interface UserData {
   name: string | null;
@@ -23,7 +24,20 @@ export function ProfileSidebar({newSession}: {newSession : UserData}) {
   const [userData, setUserData] = useState<UserData>(newSession);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [imgurl, setImgurl] = useState<string>("");
+  const [loginTime, setLoginTime] = useState<string | null>()
+  const [pickQuery, setPickQuery] = useState<string>("")
   const supabase = createClientComponentClient();
+
+  const updatePickQueryFromStorage = () => {
+    // pick query from local storage set in AnimeList.tsx and MangaList.tsx
+    const queryAnimeSearch = localStorage.getItem('query');
+    if (queryAnimeSearch) {
+      const editQuery = `${queryAnimeSearch.charAt(0).toUpperCase()}${queryAnimeSearch.substring(1)}`;
+      setPickQuery(editQuery);
+    } else {
+      setPickQuery("");
+    }
+  }; 
 
   const fetchUserData = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -48,6 +62,21 @@ export function ProfileSidebar({newSession}: {newSession : UserData}) {
       });
 
       setIsGuest(false);
+
+      // Set login time if not already set when user is logged in
+      const storedLoginTime = localStorage.getItem('loginTime');
+      if (!storedLoginTime) {
+        const currentTime = new Date().toLocaleString();
+        localStorage.setItem('loginTime', currentTime);
+        setLoginTime(currentTime);
+        console.log('User signed in at:', currentTime);
+      } else {
+        setLoginTime(storedLoginTime);
+      }
+
+      // Fetch and update the query from localStorage when the page is loaded
+      updatePickQueryFromStorage()
+      
     } else {
       setUserData({ name: null, email: null });
       setIsGuest(true);
@@ -57,19 +86,39 @@ export function ProfileSidebar({newSession}: {newSession : UserData}) {
   useEffect(() => {
     fetchUserData();
 
+     // Check if there's a stored login time in localStorage
+    const storedLoginTime = localStorage.getItem('loginTime');
+    if (storedLoginTime) {
+      setLoginTime(storedLoginTime);
+    }
+
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         fetchUserData();
+        
       } else if (event === 'SIGNED_OUT') {
         setUserData({ name: null, email: null });
         setIsGuest(true);
+
+        // Clear the stored login time on sign-out
+        localStorage.removeItem('loginTime');
+        setLoginTime(null);
+
+        // Clear the stored query on sign-out
+        localStorage.removeItem('query');
+        setPickQuery("");
       }
     });
 
+
+    // Set up an interval to check for query changes
+    const intervalId = setInterval(updatePickQueryFromStorage, 1000);
+
     return () => {
       authListener.subscription.unsubscribe();
+      clearInterval(intervalId);
     };
-  }, [supabase.auth]);
+  }, []);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -147,19 +196,11 @@ export function ProfileSidebar({newSession}: {newSession : UserData}) {
           <div className="border-t pt-6">
             <h3 className="text-sm font-medium mb-2">Recent Activity</h3>
             {isGuest ? (
-              <span className="text-muted-foreground">No recent activity</span>
+              <span className="text-muted-foreground text-sm">No recent activity</span>
             ) : (
               <div className="space-y-4">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="flex items-center space-x-4">
-                  <div className="h-2 w-2 rounded-full bg-primary" />
-                  <div className="flex-1 space-y-1">
-                    <p className="text-sm">Updated your profile picture</p>
-                    <p className="text-xs text-muted-foreground">2 hours ago</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+                <EnhancedActivity loginTime={loginTime || null} pickQuery={pickQuery}/>
+              </div>
             )}
             
           </div>
